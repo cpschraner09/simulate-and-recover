@@ -18,7 +18,7 @@ def recover_parameters(R_obs, M_obs, V_obs):
     epsilon = 1e-5
     R_obs = np.clip(R_obs, epsilon, 1 - epsilon)
     
-    # If R_obs is too close to chance (0.5), adjust it slightly so that L is nonzero.
+    # If R_obs is too close to chance (0.5), adjust so L does not throw errors
     threshold = 1e-3
     if np.abs(R_obs - 0.5) < threshold:
         # If R_obs is exactly 0.5 (or nearly), push it away from chance
@@ -31,7 +31,7 @@ def recover_parameters(R_obs, M_obs, V_obs):
     # Using the detailed formula from your slides:
     sign_factor = np.sign(R_obs - 0.5)
     inside = L * (R_obs**2 * L - R_obs * L + R_obs - 0.5)
-    nu_est = sign_factor * (np.abs(inside) / V_obs)**0.25
+    nu_est = sign_factor * (inside / V_obs)**0.25
     
     # Now compute boundary separation (alpha)
     a_est = L / nu_est
