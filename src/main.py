@@ -26,6 +26,10 @@ def simulate_and_recover(a_true, v_true, t_true, N, iterations=1000):
     invalid_count = 0
     
     for _ in range(iterations):
+        # Randomize parameters for each trial
+        a_true = np.random.uniform(0.5, 2)
+        v_true = np.random.uniform(0.5, 2)
+        t_true = np.random.uniform(0.1, 0.5)
         R_obs, M_obs, V_obs = simulate_summary_stats(a_true, v_true, t_true, N)
         nu_est, a_est, t_est = recover_parameters(R_obs, M_obs, V_obs)
         
