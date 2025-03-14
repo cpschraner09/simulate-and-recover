@@ -15,28 +15,23 @@ def recover_parameters(R_obs, M_obs, V_obs):
         t_est (float): Estimated nondecision time.
     """
     # Clip R_obs to avoid 0 or 1
+    if R_obs <= 0.0 or R_obs >= 1.0:
+        raise ValueError("R_obs must be between 0 and 1 (exclusive).")
+    
+    # Clip to avoid numerical edge cases
     epsilon = 1e-5
     R_obs = np.clip(R_obs, epsilon, 1 - epsilon)
     
-    # If R_obs is too close to chance (0.5), adjust so L does not throw errors
+    # Rest of the code remains the same
     threshold = 1e-3
     if np.abs(R_obs - 0.5) < threshold:
-        # If R_obs is exactly 0.5 (or nearly), push it away from chance
         R_obs = 0.5 + threshold if R_obs >= 0.5 else 0.5 - threshold
     
-    # Compute L = ln(R_obs / (1 - R_obs))
     L = np.log(R_obs / (1 - R_obs))
-    
-    # Inverse equation for drift rate (nu)
-    # Using the detailed formula from your slides:
     sign_factor = np.sign(R_obs - 0.5)
     inside = L * (R_obs**2 * L - R_obs * L + R_obs - 0.5)
     nu_est = sign_factor * (inside / V_obs)**0.25
-    
-    # Now compute boundary separation (alpha)
     a_est = L / nu_est
-    
-    # And compute nondecision time (tau)
     t_est = M_obs - (a_est / (2 * nu_est)) * ((1 - np.exp(-a_est * nu_est)) / (1 + np.exp(-a_est * nu_est)))
     
     return nu_est, a_est, t_est

@@ -15,6 +15,12 @@ def compute_forward_stats(a, v, t):
         M_pred (float): Predicted mean response time.
         V_pred (float): Predicted variance of response times.
     """
+    if a <= 0:
+        raise ValueError("Boundary separation 'a' must be > 0.")
+    if v <= 0:
+        raise ValueError("Drift rate 'v' must be > 0.")
+    if t <= 0:
+        raise ValueError("Nondecision time 't' must be > 0.")
     # intermediary variable y
     y = np.exp(-a * v)
     
@@ -44,23 +50,19 @@ def simulate_summary_stats(a, v, t, N):
         M_obs (float): Observed mean response time.
         V_obs (float): Observed variance of response times.
     """
-    # Compute predicted statistics
     R_pred, M_pred, V_pred = compute_forward_stats(a, v, t)
-    
-    # Equation (7) Simulate observed number of correct responses T_obs
     correct_trials = np.random.binomial(N, R_pred)
     R_obs = correct_trials / N
-    
-    # Equation (8) Simulate observed mean RT M_obs
-    # SD is sqrt(V_pred / N), numpy requires SD not variance which is V_pred / N
+
+    # Clip R_obs to avoid 0.0 or 1.0
+    epsilon = 1e-5
+    R_obs = np.clip(R_obs, epsilon, 1 - epsilon)
+
+    # Rest of the code remains unchanged
     M_obs = np.random.normal(M_pred, np.sqrt(V_pred / N))
-    
-    # Equation (9) Simulate observed variance RT V_obs
-    # Using shape parameter (N-1)/2 and scale parameter (2*V_pred)/(N-1)
     shape = (N - 1) / 2
     scale = (2 * V_pred) / (N - 1)
     V_obs = np.random.gamma(shape, scale)
-    
     return R_obs, M_obs, V_obs
 
 # Example usage (for testing purposes)
