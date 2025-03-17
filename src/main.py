@@ -3,24 +3,7 @@ from ez_diffusion import simulate_summary_stats
 from recovery import recover_parameters
 
 def simulate_and_recover(N, iterations=1000):
-    """
-    Perform the simulate-and-recover loop for a given sample size N for a fixed number
-    of iterations. All iterations are recorded; if an iteration yields invalid recovered
-    parameters, it is recorded as NaN.
-    
-    Parameters:
-        a_true (float): True boundary separation.
-        v_true (float): True drift rate.
-        t_true (float): True nondecision time.
-        N (int): Sample size (number of trials).
-        iterations (int): Total number of iterations to run.
-    
-    Returns:
-        avg_bias (ndarray): Average bias for [v, a, t] computed over valid iterations.
-        avg_squared_error (ndarray): Average squared error for [v, a, t] computed over valid iterations.
-        valid_iterations (int): Number of iterations with valid recovered parameters.
-        invalid_iterations (int): Number of iterations with invalid recovered parameters.
-    """
+
     biases = []
     squared_errors = []
     invalid_count = 0
