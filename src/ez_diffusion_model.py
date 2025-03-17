@@ -1,6 +1,7 @@
 from src.recovery import recover_parameters
 
-class EZDiffusionModel:
+#(drafted with help of ChatGPT o3-mini-high)
+class EZDiffusionModel:  
 
     def __init__(self, data):
         """

@@ -2,26 +2,14 @@ import numpy as np
 from scipy.stats import norm, gamma
 
 def compute_forward_stats(a, v, t):
-    """
-    Compute the forward EZ diffusion model predictions.
-    
-    Parameters:
-        a (float): Boundary separation.
-        v (float): Drift rate.
-        t (float): Nondecision time.
-    
-    Returns:
-        R_pred (float): Predicted accuracy rate.
-        M_pred (float): Predicted mean response time.
-        V_pred (float): Predicted variance of response times.
-    """
+
     if a <= 0:
         raise ValueError("Boundary separation 'a' must be > 0.")
     if v <= 0:
         raise ValueError("Drift rate 'v' must be > 0.")
     if t <= 0:
         raise ValueError("Nondecision time 't' must be > 0.")
-    # intermediary variable y
+    # Intermediary variable y
     y = np.exp(-a * v)
     
     # Equation (1)
@@ -34,6 +22,7 @@ def compute_forward_stats(a, v, t):
     V_pred = (a / (2*(v**3))) * ((1 - 2 * a * v * y - y**2) / ((1 + y)**2))
     
     return R_pred, M_pred, V_pred
+    #Equations verified with help of ChatGPT o3-mini-high
 
 def simulate_summary_stats(a, v, t, N):
     """
@@ -54,11 +43,12 @@ def simulate_summary_stats(a, v, t, N):
     correct_trials = np.random.binomial(N, R_pred)
     R_obs = correct_trials / N
 
-    # Clip R_obs to avoid 0.0 or 1.0
+    # Clip R_obs to avoid 0.0 or 1.0 
+    #likely cause of high bias in N=10, as when removed there are no errors, lower bias but many failed iterations
     epsilon = 1e-5
     R_obs = np.clip(R_obs, epsilon, 1 - epsilon)
 
-    # Rest of the code remains unchanged
+    # Rest of the code remains unchanged (drafted with help of ChatGPT o3-mini-high)
     M_obs = np.random.normal(M_pred, np.sqrt(V_pred / N))
     shape = (N - 1) / 2
     scale = (2 * V_pred) / (N - 1)

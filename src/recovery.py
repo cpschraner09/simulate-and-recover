@@ -1,28 +1,18 @@
 import numpy as np
 
 def recover_parameters(R_obs, M_obs, V_obs):
-    """
-    Recover EZ diffusion model parameters from observed summary statistics.
-    
-    Parameters:
-        R_obs (float): Observed accuracy rate.
-        M_obs (float): Observed mean response time.
-        V_obs (float): Observed variance of response times.
-    
-    Returns:
-        nu_est (float): Estimated drift rate.
-        a_est (float): Estimated boundary separation.
-        t_est (float): Estimated nondecision time.
-    """
-    # Clip R_obs to avoid 0 or 1
+
+    # Clip R_obs to avoid 0 or 1 (drafted with help of ChatGPT o3-mini-high)
+    #test fails if removed
     if R_obs <= 0.0 or R_obs >= 1.0:
         raise ValueError("R_obs must be between 0 and 1 (exclusive).")
     
-    # Clip to avoid numerical edge cases
+    # Clip to avoid numerical edge cases (no change if removed?)
     epsilon = 1e-5
     R_obs = np.clip(R_obs, epsilon, 1 - epsilon)
     
-    # Rest of the code remains the same
+    # Rest of the code remains the same 
+    #if removed: invalid value encountered in scalar divide a_est = L / nu_est
     threshold = 1e-3
     if np.abs(R_obs - 0.5) < threshold:
         R_obs = 0.5 + threshold if R_obs >= 0.5 else 0.5 - threshold
