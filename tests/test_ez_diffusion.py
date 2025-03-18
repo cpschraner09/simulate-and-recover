@@ -4,7 +4,7 @@ from src.ez_diffusion import compute_forward_stats, simulate_summary_stats
 from src.recovery import recover_parameters
 from src.ez_diffusion_model import EZDiffusionModel
 
-class TestEZDiffusion(unittest.TestCase):
+class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini-high)
     def setUp(self):
         self.standard_params = [
             (1.0, 1.0, 0.3),   # mid-range values
@@ -193,7 +193,7 @@ class TestEZDiffusion(unittest.TestCase):
             compute_forward_stats(1.0, 1.0, "baz")
 
 
-#Corruption Tests
+#Corruption Tests (drafted with help of ChatGPT o3-mini-high)
 class TestCorruption(unittest.TestCase):
     def test_invalid_constructor(self):
         """Test that providing invalid data to the constructor raises ValueError."""
@@ -229,9 +229,6 @@ class TestCorruption(unittest.TestCase):
         data2 = (0.8, 0.6, 0.05)
         model.data = data2
         self.assertNotEqual(model.nu_est, original_nu)
-
-if __name__ == '__main__':
-    unittest.main()
 
 
 if __name__ == '__main__':
