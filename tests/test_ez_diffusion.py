@@ -76,50 +76,54 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
                 params = recover_parameters(R, M, V)
                 self.assertFalse(np.isnan(params).any())
 
-    # Noise and Sampling Test
     def test_recovery_with_sampling_noise(self):
-        #Test parameter recovery with simulated sampling noise
-        for a, v, t in self.standard_params:
-            with self.subTest(a=a, v=v, t=t):
-                biases = []
-                for _ in range(1000):
-                    R_obs, M_obs, V_obs = simulate_summary_stats(a, v, t, N=100)
-                    v_est, a_est, t_est = recover_parameters(R_obs, M_obs, V_obs)
-                    biases.append([
-                        (a_est - a) / a, 
-                        (v_est - v) / v, 
-                        (t_est - t) / t
-                    ])
-                avg_bias = np.nanmean(biases, axis=0)
-                for bias in avg_bias:
-                    self.assertAlmostEqual(bias, 0.0, delta=0.10)
+        # Test parameter recovery with simulated sampling noise for BOTH clipping cases (Chatgpt assisted)
+        for clip_value in [True, False]:
+            with self.subTest(clip=clip_value):
+                for a, v, t in self.standard_params:
+                    with self.subTest(a=a, v=v, t=t):
+                        biases = []
+                        for _ in range(1000):
+                            R_obs, M_obs, V_obs = simulate_summary_stats(a, v, t, N=100, clip=clip_value)
+                            v_est, a_est, t_est = recover_parameters(R_obs, M_obs, V_obs)
+                            biases.append([
+                                (a_est - a) / a, 
+                                (v_est - v) / v, 
+                                (t_est - t) / t
+                            ])
+                        avg_bias = np.nanmean(biases, axis=0)
+                        for bias in avg_bias:
+                            self.assertAlmostEqual(bias, 0.0, delta=0.10)
 
     def test_sample_size_effects(self):
-        #Test that error typically decreases with increasing sample size
-        for a, v, t in self.standard_params:
-            for N in self.N_values:
-                errors = []
-                valid_iterations = 0
-                for _ in range(100):
-                    try:
-                        R_obs, M_obs, V_obs = simulate_summary_stats(a, v, t, N)
-                        v_est, a_est, t_est = recover_parameters(R_obs, M_obs, V_obs)
-                        errors.append([
-                            ((a_est - a)/a)**2,
-                            ((v_est - v)/v)**2,
-                            ((t_est - t)/t)**2
-                        ])
-                        valid_iterations += 1
-                    except ValueError:
-                        # Skip invalid iterations (R_obs=0/1)
-                        continue
-                
-                if valid_iterations == 0:
-                    self.skipTest(f"No valid iterations for params {a}, {v}, {t}, N={N}")
-                
-                avg_error = np.mean(errors, axis=0)
-                if N >= 4000:
-                    self.assertTrue(all(e < 0.03 for e in avg_error))
+    # Test that error typically decreases with increasing sample size for BOTH clipping cases (Chatgpt assisted).
+        for clip_value in [True, False]:
+            with self.subTest(clip=clip_value):
+                for a, v, t in self.standard_params:
+                    for N in self.N_values:
+                        errors = []
+                        valid_iterations = 0
+                        for _ in range(100):
+                            try:
+                                R_obs, M_obs, V_obs = simulate_summary_stats(a, v, t, N, clip=clip_value)
+                                v_est, a_est, t_est = recover_parameters(R_obs, M_obs, V_obs)
+                                errors.append([
+                                    ((a_est - a) / a)**2,
+                                    ((v_est - v) / v)**2,
+                                    ((t_est - t) / t)**2
+                                ])
+                                valid_iterations += 1
+                            except ValueError:
+                                # Skip invalid iterations (e.g., R_obs=0 or 1)
+                                continue
+                        
+                        if valid_iterations == 0:
+                            self.skipTest(f"No valid iterations for params {a}, {v}, {t}, N={N}, clip={clip_value}")
+                        
+                        avg_error = np.mean(errors, axis=0)
+                        if N >= 4000:
+                            self.assertTrue(all(e < 0.03 for e in avg_error))
+
 
     # Input Validation Tests
     def test_invalid_parameters(self):
@@ -153,9 +157,9 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
 
             
     def test_parameter_sensitivity(self):
-        """
-        Check that increasing v increases R_pred, increasing a increases both M_pred and R_pred (for positive drift), and increasing t primarily shifts M_pred without changing R_pred.
-        """
+        
+        #Check that increasing v increases R_pred, increasing a increases both M_pred and R_pred (for positive drift), and increasing t primarily shifts M_pred without changing R_pred.
+   
         # Baseline
         a, v, t = 1.0, 1.0, 0.3
         R0, M0, V0 = compute_forward_stats(a, v, t)
@@ -193,7 +197,7 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
             compute_forward_stats(1.0, 1.0, "baz")
 
 
-#Corruption Tests (drafted with help of ChatGPT o3-mini-high)
+#Corruption Tests (for ez_diffusion_model drafted with help of ChatGPT o3-mini-high)
 class TestCorruption(unittest.TestCase):
     def test_invalid_constructor(self):
         """Test that providing invalid data to the constructor raises ValueError."""
