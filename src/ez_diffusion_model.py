@@ -21,9 +21,9 @@ class EZDiffusionModel:
     
     @property
     def data(self):
-        """Return the observed summary statistics."""
+        #Return the observed summary statistics
         return self._data
-    
+
     @data.setter
     def data(self, new_data):
         if not (isinstance(new_data, tuple) and len(new_data) == 3):
@@ -33,17 +33,17 @@ class EZDiffusionModel:
     
     @property
     def nu_est(self):
-        """Recovered drift rate."""
+        #Recovered drift rate
         return self._nu_est
     
     @property
     def a_est(self):
-        """Recovered boundary separation."""
+        #Recovered boundary separation
         return self._a_est
     
     @property
     def t_est(self):
-        """Recovered nondecision time."""
+        #Recovered nondecision time
         return self._t_est
 
 
