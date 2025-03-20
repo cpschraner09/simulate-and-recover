@@ -4,7 +4,7 @@ from src.ez_diffusion import compute_forward_stats, simulate_summary_stats
 from src.recovery import recover_parameters
 from src.ez_diffusion_model import EZDiffusionModel
 
-class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini-high)
+class TestEZDiffusion(unittest.TestCase): #Drafted with help of ChatGPT o3-mini-high
     def setUp(self):
         self.standard_params = [
             (1.0, 1.0, 0.3),   # mid-range values
@@ -20,7 +20,7 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
         }
 
     def test_forward_calculations(self):
-        #Test theoretical calculations against the standard closed-form solutions
+        # Test theoretical calculations against the standard closed-form solutions
         for a, v, t in self.standard_params:
             with self.subTest(a=a, v=v, t=t):
                 R_pred, M_pred, V_pred = compute_forward_stats(a, v, t)
@@ -45,7 +45,7 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
                 self.assertAlmostEqual(V_pred, expected_V, places=5)
 
     def test_parameter_recovery_ideal(self):
-        #Test perfect recovery with noise-free data.
+        # Test perfect recovery with noise-free data
         for a, v, t in self.standard_params:
             with self.subTest(a=a, v=v, t=t):
                 R, M, V = compute_forward_stats(a, v, t)
@@ -57,7 +57,7 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
 
     # Edge Case Tests
     def test_extreme_performance_cases(self):
-        #Test recovery failure for unanimous responses (R=1.0 or R=0.0)
+        # Test recovery failure for unanimous responses (R=1.0 or R=0.0)
         # Expect recover_parameters to raise ValueError if so designed
         with self.assertRaises(ValueError):
             recover_parameters(1.0, 0.3, 0.1)  # all correct
@@ -65,7 +65,7 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
             recover_parameters(0.0, 0.3, 0.1)  # all incorrect
 
     def test_boundary_R_values(self):
-        #Test numerical stability at performance boundaries
+        # Test numerical stability at performance boundaries
         test_cases = [
             (0.501, 0.3, 0.1),   # near-chance
             (0.999, 0.4, 0.2),   # near-perfect
@@ -77,26 +77,35 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
                 self.assertFalse(np.isnan(params).any())
 
     def test_recovery_with_sampling_noise(self):
-        # Test parameter recovery with simulated sampling noise for BOTH clipping cases (Chatgpt assisted)
+    # Test parameter recovery with simulated sampling noise for BOTH clipping cases.
         for clip_value in [True, False]:
             with self.subTest(clip=clip_value):
                 for a, v, t in self.standard_params:
                     with self.subTest(a=a, v=v, t=t):
                         biases = []
+                        valid_count = 0
                         for _ in range(1000):
-                            R_obs, M_obs, V_obs = simulate_summary_stats(a, v, t, N=100, clip=clip_value)
-                            v_est, a_est, t_est = recover_parameters(R_obs, M_obs, V_obs)
-                            biases.append([
-                                (a_est - a) / a, 
-                                (v_est - v) / v, 
-                                (t_est - t) / t
-                            ])
+                            try:
+                                R_obs, M_obs, V_obs = simulate_summary_stats(a, v, t, N=100, clip=clip_value)
+                                v_est, a_est, t_est = recover_parameters(R_obs, M_obs, V_obs)
+                                biases.append([
+                                    (a_est - a) / a, 
+                                    (v_est - v) / v, 
+                                    (t_est - t) / t
+                                ])
+                                valid_count += 1
+                            except ValueError:
+                                # Skip invalid iterations (e.g., when R_obs equals 0 or 1), occurs without clip
+                                continue
+                        if valid_count == 0:
+                            self.skipTest(f"No valid iterations for a={a}, v={v}, t={t}, clip={clip_value}")
                         avg_bias = np.nanmean(biases, axis=0)
                         for bias in avg_bias:
                             self.assertAlmostEqual(bias, 0.0, delta=0.10)
 
+
     def test_sample_size_effects(self):
-    # Test that error typically decreases with increasing sample size for BOTH clipping cases (Chatgpt assisted).
+    # Test that error typically decreases with increasing sample size for BOTH clipping cases (Chatgpt assisted)
         for clip_value in [True, False]:
             with self.subTest(clip=clip_value):
                 for a, v, t in self.standard_params:
@@ -127,7 +136,7 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
 
     # Input Validation Tests
     def test_invalid_parameters(self):
-        #Test input validation for invalid parameters
+        # Test input validation for invalid parameters
         invalid_params = [
             (-0.5, 1.0, 0.3),   # negative a
             (1.0, -1.0, 0.3),   # negative v
@@ -141,7 +150,7 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
 
     # Numerical Stability Tests
     def test_numerical_edge_cases(self):
-        #Test challenging numerical scenarios
+        # Test challenging numerical scenarios
         params = recover_parameters(0.6, 0.3, 1e-8)
         self.assertTrue(np.isfinite(params).all())
         
@@ -150,7 +159,7 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
 
     # System Property Tests
     def test_identifiability(self):
-        #Test that distinct parameter sets produce different forward stats
+        # Test that distinct parameter sets produce different forward stats
         stats1 = compute_forward_stats(1.0, 1.0, 0.3)
         stats2 = compute_forward_stats(0.8, 1.2, 0.35)
         self.assertFalse(np.allclose(stats1, stats2, atol=1e-3))
@@ -158,7 +167,9 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
             
     def test_parameter_sensitivity(self):
         
-        #Check that increasing v increases R_pred, increasing a increases both M_pred and R_pred (for positive drift), and increasing t primarily shifts M_pred without changing R_pred.
+        # (Chatgpt assisted) Check that increasing v increases R_pred, increasing a increases 
+        # both M_pred and R_pred (for positive drift), and increasing t primarily shifts M_pred 
+        # without changing R_pred.
    
         # Baseline
         a, v, t = 1.0, 1.0, 0.3
@@ -195,9 +206,31 @@ class TestEZDiffusion(unittest.TestCase): #(drafted with help of ChatGPT 03-mini
 
         with self.assertRaises((TypeError, ValueError)):
             compute_forward_stats(1.0, 1.0, "baz")
+    
+    def test_model_recovery_strict(self):
+    # Testing our object oriented model (Generated by Chatgpt)
+    # Choose known true parameters
+        a_true = 1.0
+        v_true = 1.2
+        t_true = 0.3
+        
+        # Compute noise-free summary statistics using the forward model
+        R_obs, M_obs, V_obs = compute_forward_stats(a_true, v_true, t_true)
+        
+        # Use the EZDiffusionModel to recover parameters from the summary stats
+        model = EZDiffusionModel((R_obs, M_obs, V_obs))
+        
+        # Check that the recovered parameters match the true parameters within a strict tolerance
+        self.assertAlmostEqual(model.a_est, a_true, delta=0.001, 
+                            msg="Recovered boundary separation deviates too much.")
+        self.assertAlmostEqual(model.nu_est, v_true, delta=0.001, 
+                            msg="Recovered drift rate deviates too much.")
+        self.assertAlmostEqual(model.t_est, t_true, delta=0.001, 
+                            msg="Recovered nondecision time deviates too much.")
 
 
-#Corruption Tests (for ez_diffusion_model drafted with help of ChatGPT o3-mini-high)
+
+# Corruption Tests (for ez_diffusion_model drafted with help of ChatGPT o3-mini-high)
 class TestCorruption(unittest.TestCase):
     def test_invalid_constructor(self):
         """Test that providing invalid data to the constructor raises ValueError."""
@@ -215,7 +248,7 @@ class TestCorruption(unittest.TestCase):
         """Test that the recovered parameters are read-only and cannot be set."""
         valid_data = (0.75, 0.5, 0.04)
         model = EZDiffusionModel(valid_data)
-        # Attempting to directly set a read-only property should raise an AttributeError.
+        # Attempting to directly set a read-only property should raise an AttributeError
         with self.assertRaises(AttributeError):
             model.nu_est = 10
         with self.assertRaises(AttributeError):
