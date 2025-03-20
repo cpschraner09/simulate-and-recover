@@ -24,7 +24,7 @@ def compute_forward_stats(a, v, t):
     return R_pred, M_pred, V_pred
     #Equations verified with help of ChatGPT o3-mini-high
 
-def simulate_summary_stats(a, v, t, N):
+def simulate_summary_stats(a, v, t, N, clip=True):
     """
     Simulate observed summary statistics from the EZ diffusion model.
     
@@ -44,9 +44,9 @@ def simulate_summary_stats(a, v, t, N):
     R_obs = correct_trials / N
 
     # Clip R_obs to avoid 0.0 or 1.0 
-    #likely cause of high bias in N=10, as when removed there are no errors, lower bias but many failed iterations
-    epsilon = 1e-5
-    R_obs = np.clip(R_obs, epsilon, 1 - epsilon)
+    if clip:
+        epsilon = 1e-5
+        R_obs = np.clip(R_obs, epsilon, 1 - epsilon)
 
     # Rest of the code remains unchanged (drafted with help of ChatGPT o3-mini-high)
     M_obs = np.random.normal(M_pred, np.sqrt(V_pred / N))
